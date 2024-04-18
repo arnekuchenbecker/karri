@@ -31,6 +31,7 @@
 #include <random>
 #include "DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
 #include "Algorithms/Dijkstra/Dijkstra.h"
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/Filters/AllPDLocsFilter.h"
 
 namespace karri {
 
@@ -38,7 +39,7 @@ namespace karri {
 // This class finds every possible location suited for passenger pickups or dropoffs in a given radius around the
 // origin or destination of a request. When queried, a local Dijkstra search bounded by the given radius is executed
 // around the center point.
-    template<typename PassengerGraphT, typename WeightT = TravelTimeAttribute>
+    template<typename PassengerGraphT, typename WeightT = TravelTimeAttribute, typename FilterT = AllPDLocsFilter, typename FilterParamT = AllPDLocsParams>
     class FindPDLocsInRadiusQuery {
 
     private:
@@ -89,7 +90,9 @@ namespace karri {
                   dropoffSearch(reversePsgGraph, {inputConfig.dropoffRadius},
                                 {searchSpace}),
                   searchSpace(),
-                  rand(seed) {}
+                  rand(seed) {
+            setFilter();
+        }
 
         // Pickups will be collected into the given pickups vector and dropoffs will be collected into the given dropoffs vector
         void findPDLocs(const int origin, const int destination) {
@@ -160,17 +163,24 @@ namespace karri {
             const auto idx = centerIt - pdLocs.begin();
             std::swap(pdLocs[0], pdLocs[idx]);
 
-            if (maxNumber > 1 && pdLocs.size() > maxNumber) {
-                // If there are more PD-locs than the maximum number, then we permute the PD-locs randomly and
-                // use only the first maxNumber ones. We make sure that the center is included and stays at the
-                // beginning of the PD-locs.
-                const auto perm = Permutation::getRandomPermutation(pdLocs.size(), rand);
-                perm.applyTo(pdLocs);
-                std::swap(pdLocs[perm[0]], pdLocs[0]);
+            //if (maxNumber > 1 && pdLocs.size() > maxNumber) {
+            //    // If there are more PD-locs than the maximum number, then we permute the PD-locs randomly and
+            //    // use only the first maxNumber ones. We make sure that the center is included and stays at the
+            //    // beginning of the PD-locs.
+            //    const auto perm = Permutation::getRandomPermutation(pdLocs.size(), rand);
+            //    perm.applyTo(pdLocs);
+            //    std::swap(pdLocs[perm[0]], pdLocs[0]);
+            //}
+//
+            //const int desiredSize = std::min(static_cast<int>(pdLocs.size()), maxNumber);
+            //pdLocs.resize(desiredSize);
+
+            if(maxNumber == 1) {
+                std::cout << "Should only filter 1 pdloc" << std::endl;
             }
 
-            const int desiredSize = std::min(static_cast<int>(pdLocs.size()), maxNumber);
-            pdLocs.resize(desiredSize);
+
+            pdLocFilter.filter(pdLocs, pdLocFilterParams);
 
             // Assign sequential ids
             for (int i = 0; i < pdLocs.size(); ++i) {
@@ -204,9 +214,19 @@ namespace karri {
             return true;
         }
 
+        void setFilter() {
+            switch(inputConfig.filterStrategy) {
+                case PDLocFilterStrategy::ALL_PD_LOCS:
+                    pdLocFilter = AllPDLocsFilter();
+                    pdLocFilterParams = AllPDLocsParams();
+            }
+        }
+
         const PassengerGraphT &forwardGraph;
         const PassengerGraphT &reverseGraph;
         const InputConfig &inputConfig;
+        FilterT pdLocFilter;
+        FilterParamT pdLocFilterParams;
         std::vector<PDLoc> &pickups;
         std::vector<PDLoc> &dropoffs;
         PickupSearch pickupSearch;

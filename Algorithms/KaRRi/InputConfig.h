@@ -24,6 +24,9 @@
 
 
 #pragma once
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/FilterStrategies.h"
+
 namespace karri {
 
     struct InputConfig {
@@ -37,6 +40,7 @@ namespace karri {
         double alpha = -1;
         int beta = -1;
         bool alwaysUseVehicle = false;
+        PDLocFilterStrategy filterStrategy = PDLocFilterStrategy::ALL_PD_LOCS;
     };
 
 }
