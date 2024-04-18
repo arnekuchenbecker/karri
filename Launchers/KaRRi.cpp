@@ -557,9 +557,16 @@ int main(int argc, char *argv[]) {
         using DALSInsertionsFinderImpl = DALSAssignmentsFinder<DALSStrategy>;
         DALSInsertionsFinderImpl dalsInsertionsFinder(dalsStrategy);
 
-        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl>;
+#if KARRI_FILTER_STRATEGY == KARRI_FILTER_MAXIMUM_RANDOM
+        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, MaximumNumberPDLocsFilter>;
+        MaximumNumberPDLocsFilter filter(inputConfig.maxNumDropoffs);
+#else //KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL
+        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, AllPDLocsFilter>;
+        AllPDLocsFilter filter;
+#endif
+
         RequestStateInitializerImpl requestStateInitializer(vehicleInputGraph, psgInputGraph, *vehChEnv, *psgChEnv,
-                                                            reqState, inputConfig, vehicleToPdLocQuery);
+                                                            reqState, inputConfig, vehicleToPdLocQuery, filter);
 
 
         using InsertionFinderImpl = AssignmentFinder<RequestStateInitializerImpl,
