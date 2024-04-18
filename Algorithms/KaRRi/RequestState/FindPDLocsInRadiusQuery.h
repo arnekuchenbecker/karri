@@ -31,8 +31,8 @@
 #include <random>
 #include "DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
 #include "Algorithms/Dijkstra/Dijkstra.h"
-#include "Algorithms/KaRRi/RequestState/PDLocFilters/Filters/AllPDLocsFilter.h"
-#include "Algorithms/KaRRi/RequestState/PDLocFilters/Filters/MaximumNumberPDLocsFilter.h"
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/AllPDLocsFilter.h"
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/MaximumNumberPDLocsFilter.h"
 
 namespace karri {
 
