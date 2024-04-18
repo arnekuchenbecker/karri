@@ -9,9 +9,8 @@ namespace karri {
      */
     class AllPDLocsFilter {
     public:
-        void filter(std::vector<PDLoc>& pdLocs, AllPDLocsParams& params) {
+        void filter(std::vector<PDLoc>& pdLocs) {
             (void) pdLocs;
-            (void) params;
         }
     };
 }

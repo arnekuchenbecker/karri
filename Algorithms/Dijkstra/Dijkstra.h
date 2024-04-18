@@ -74,7 +74,7 @@ namespace karri {
     template<typename, typename, bool>
     class EllipticBucketsEnvironment;
 
-    template<typename, typename, typename, typename>
+    template<typename, typename, typename>
     class FindPDLocsInRadiusQuery;
 
     template<typename, typename, typename, typename, typename>
