@@ -202,12 +202,14 @@ endif (KARRI_COL_PALS_ONLY_PROMISING_DROPOFFS)
 ## Options for PD Location Filters
 set(FILTER_ALL 1)
 set(FILTER_MAX_RANDOM 2)
+set(FILTER_CH_ABS 3)
 
 target_compile_definitions(karri PRIVATE KARRI_FILTER_ALL=${FILTER_ALL})
 target_compile_definitions(karri PRIVATE KARRI_FILTER_MAXIMUM_RANDOM=${FILTER_MAX_RANDOM})
-set(KARRI_FILTER_STRAT_VALUES ALL MAX_RAND)
+target_compile_definitions(karri PRIVATE KARRI_FILTER_CH_ABSOLUTE=${FILTER_CH_ABS})
+set(KARRI_FILTER_STRAT_VALUES ALL MAX_RAND CH_ABS)
 
-set(KARRI_FILTER_STRATEGY ALL CACHE STRING "Pickup-After-Last-Stop strategy to use. Possible values: ALL, MAX_RAND")
+set(KARRI_FILTER_STRATEGY ALL CACHE STRING "Pickup-After-Last-Stop strategy to use. Possible values: ALL, MAX_RAND, CH_ABS")
 set_property(CACHE KARRI_FILTER_STRATEGY PROPERTY STRINGS ${KARRI_FILTER_STRAT_VALUES})
 list(FIND KARRI_FILTER_STRAT_VALUES ${KARRI_FILTER_STRATEGY} index)
 if (index EQUAL -1)
@@ -216,6 +218,8 @@ endif ()
 
 if (${KARRI_FILTER_STRATEGY} STREQUAL MAX_RAND)
     target_compile_definitions(karri PRIVATE KARRI_FILTER_STRATEGY=${FILTER_MAX_RANDOM}) # Maximum Number Random Filter
+elseif(${KARRI_FILTER_STRATEGY} STREQUAL CH_ABS)
+    target_compile_definitions(karri PRIVATE KARRI_FILTER_STRATEGY=${FILTER_CH_ABS}) # Absolute number according to CH
 else()
     target_compile_definitions(karri PRIVATE KARRI_FILTER_STRATEGY=${FILTER_ALL}) # All PD Locs Filter
 endif()

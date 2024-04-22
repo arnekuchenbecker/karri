@@ -31,8 +31,6 @@
 #include <random>
 #include "DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
 #include "Algorithms/Dijkstra/Dijkstra.h"
-#include "Algorithms/KaRRi/RequestState/PDLocFilters/AllPDLocsFilter.h"
-#include "Algorithms/KaRRi/RequestState/PDLocFilters/MaximumNumberPDLocsFilter.h"
 
 namespace karri {
 
@@ -147,7 +145,6 @@ namespace karri {
         }
 
         void finalizePDLocs(const int centerInPsgGraph, std::vector<PDLoc> &pdLocs) {
-            assert(maxNumber > 0);
             // Add center to PD locs
             const int nextSeqId = pdLocs.size();
             const int centerInVehGraph = forwardGraph.toCarEdge(centerInPsgGraph);

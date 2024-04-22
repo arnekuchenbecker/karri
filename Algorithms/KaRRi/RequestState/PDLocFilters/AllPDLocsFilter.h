@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Algorithms/KaRRi/BaseObjects/Request.h"
-#include "Algorithms/KaRRi/RequestState/PDLocFilters/Parameters/AllPDLocsParams.h"
 
 namespace karri {
     /**

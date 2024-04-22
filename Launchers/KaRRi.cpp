@@ -109,6 +109,20 @@
 
 #endif
 
+#if KARRI_FILTER_STRATEGY == KARRI_FILTER_MAXIMUM_RANDOM
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/MaximumNumberPDLocsFilter.h"
+
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_ABSOLUTE
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/AbsoluteCHPDLocsFilter.h"
+
+#else //KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/AllPDLocsFilter.h"
+
+#endif
+
 
 inline void printUsage() {
     std::cout <<
@@ -560,6 +574,9 @@ int main(int argc, char *argv[]) {
 #if KARRI_FILTER_STRATEGY == KARRI_FILTER_MAXIMUM_RANDOM
         using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, MaximumNumberPDLocsFilter>;
         MaximumNumberPDLocsFilter filter(inputConfig.maxNumDropoffs);
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_ABSOLUTE
+        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, AbsoluteCHPDLocsFilter<VehCHEnv, VehicleInputGraph>>;
+        AbsoluteCHPDLocsFilter filter(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
 #else //KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL
         using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, AllPDLocsFilter>;
         AllPDLocsFilter filter;
