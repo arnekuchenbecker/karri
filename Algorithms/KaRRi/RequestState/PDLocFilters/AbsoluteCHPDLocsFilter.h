@@ -4,8 +4,8 @@
 
 namespace karri {
     /**
-     * This filter removes all PDLocs, whose head vertex is not in the top maximum most important vertices, according to
-     * the ordering given by the contraction order of the given CH
+     * This filter returns the top maximum number of PDLocs, sorted first by decreasing importance (according to the
+     * contraction order of the given CH) and second by increasing walking distance.
      */
     template<typename VehCHEnv, typename VehicleInputGraph>
     class AbsoluteCHPDLocsFilter {
@@ -16,27 +16,17 @@ namespace karri {
                   maximum(maximum) {}
 
         void filter(std::vector<PDLoc> &pdLocs) {
-            std::vector<int> ranks;
-
-            for (PDLoc& loc: pdLocs) {
-                ranks.emplace_back(ch.rank(graph.edgeHead(loc.loc)));
+            if (pdLocs.size() <= maximum) {
+                // Nothing to do here, we already have less than the required amount of PD Locs
+                return;
             }
-            std::sort(ranks.begin(), ranks.end(), std::greater());
-            ranks.erase( std::unique( ranks.begin(), ranks.end() ), ranks.end() );
+            std::sort(pdLocs.begin() + 1, pdLocs.end(), [this](const PDLoc& loc1, const PDLoc loc2) {
+                int order1 = ch.contractionOrder(graph.edgeHead(loc1.loc));
+                int order2 = ch.contractionOrder(graph.edgeHead(loc2.loc));
+                return (order1 > order2) || ((order1 == order2) && (loc1.walkingDist < loc2.walkingDist));
+            });
 
-            int cutoff = ranks[maximum];
-
-            int swapped = 1;
-
-            for (int i = 1; i < pdLocs.size(); i++) {
-                int j = ch.rank(graph.edgeHead(pdLocs[i].loc));
-                if (j >= cutoff) {
-                    std::swap(pdLocs[swapped], pdLocs[i]);
-                    swapped++;
-                }
-            }
-
-            pdLocs.resize(swapped);
+            pdLocs.resize(maximum);
         }
 
     private:
