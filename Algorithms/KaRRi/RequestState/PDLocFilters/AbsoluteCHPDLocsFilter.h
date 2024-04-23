@@ -21,8 +21,8 @@ namespace karri {
                 return;
             }
             std::sort(pdLocs.begin() + 1, pdLocs.end(), [this](const PDLoc& loc1, const PDLoc loc2) {
-                int order1 = ch.contractionOrder(graph.edgeHead(loc1.loc));
-                int order2 = ch.contractionOrder(graph.edgeHead(loc2.loc));
+                int order1 = ch.rank(graph.edgeHead(loc1.loc));
+                int order2 = ch.rank(graph.edgeHead(loc2.loc));
                 return (order1 > order2) || ((order1 == order2) && (loc1.walkingDist < loc2.walkingDist));
             });
 
