@@ -30,8 +30,8 @@ namespace karri {
         }
 
     private:
-        const CH &ch;
-        const VehicleInputGraph graph;
+        const CH& ch;
+        const VehicleInputGraph& graph;
         const int maximum;
     };
 }
