@@ -117,6 +117,10 @@
 
 #include "Algorithms/KaRRi/RequestState/PDLocFilters/AbsoluteCHPDLocsFilter.h"
 
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_RELATIVE
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/RelativeCHPDLocsFilter.h"
+
 #else //KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL
 
 #include "Algorithms/KaRRi/RequestState/PDLocFilters/AllPDLocsFilter.h"
@@ -577,7 +581,11 @@ int main(int argc, char *argv[]) {
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_ABSOLUTE
         using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, AbsoluteCHPDLocsFilter<VehCHEnv, VehicleInputGraph>>;
         AbsoluteCHPDLocsFilter filter(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_RELATIVE
+        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, RelativeCHPDLocsFilter<VehCHEnv, VehicleInputGraph>>;
+        RelativeCHPDLocsFilter filter(*vehChEnv, vehicleInputGraph, (double) inputConfig.maxNumDropoffs / 100);
 #else //KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL
+        std::cout << "Karri Filter Strategy: " << KARRI_FILTER_STRATEGY << std::endl;
         using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, AllPDLocsFilter>;
         AllPDLocsFilter filter;
 #endif
