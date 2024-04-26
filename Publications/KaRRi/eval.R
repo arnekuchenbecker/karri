@@ -172,3 +172,51 @@ eventSimulationPerfStats <- function(file_base) {
   print(df)
   
 }
+
+getLowPDLocRows <- function(file_base) {
+  overallStats <- read.csv(paste0(file_base, ".perf_", "overall", ".csv"))
+  requestIDs <- overallStats[overallStats$num_pickups<5 | overallStats$num_dropoffs<5, colnames(overallStats) %in% c("request_id")]
+  
+  return(requestIDs)
+}
+
+getHighPDLocRows <- function(file_base) {
+  overallStats <- read.csv(paste0(file_base, ".perf_", "overall", ".csv"))
+  requestIDs <- overallStats[!(overallStats$num_pickups<5 | overallStats$num_dropoffs<5), colnames(overallStats) %in% c("request_id")]
+  
+  return(requestIDs)
+}
+
+getQuality <- function(file_base, suffix) {
+  quality <- read.csv(paste0(file_base, ".assignmentquality.csv"))
+  quality <- quality[, colnames(quality) %in% c("request_id", "trip_time")]
+  names(quality)[names(quality)=="trip_time"] <- paste0("trip_time", suffix)
+  return(quality)
+}
+
+compareLowPDLocs <- function(relative_file_base, absolute_file_base) {
+  requestIDs <- getLowPDLocRows(relative_file_base)
+  relativeQuality <- getQuality(relative_file_base, "_rel")
+  absoluteQuality <- getQuality(absolute_file_base, "_abs")
+  relativeQuality <- subset(relativeQuality, request_id %in% requestIDs)
+  absoluteQuality <- subset(absoluteQuality, request_id %in% requestIDs)
+  result <- merge(relativeQuality, absoluteQuality, by = "request_id")
+  result <- result[, ! colnames(result) %in% c("request_id")]
+  result <- result[,1] - result[,2]
+  result <- sum(result)
+  return(result)
+}
+
+compareHighPDLocs <- function(relative_file_base, absolute_file_base) {
+  requestIDs <- getHighPDLocRows(relative_file_base)
+  relativeQuality <- getQuality(relative_file_base, "_rel")
+  relativeQuality <- getQuality(relative_file_base, "_rel")
+  absoluteQuality <- getQuality(absolute_file_base, "_abs")
+  relativeQuality <- subset(relativeQuality, request_id %in% requestIDs)
+  absoluteQuality <- subset(absoluteQuality, request_id %in% requestIDs)
+  result <- merge(relativeQuality, absoluteQuality, by = "request_id")
+  result <- result[, ! colnames(result) %in% c("request_id")]
+  result <- result[,1] - result[,2]
+  result <- sum(result)
+  return(result)
+}
