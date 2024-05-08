@@ -1,5 +1,3 @@
-
-
 # Converts number of seconds to MM:SS format.
 convertToMMSS <- function(seconds) {
   seconds <- as.double(seconds)
@@ -219,4 +217,58 @@ compareHighPDLocs <- function(relative_file_base, absolute_file_base) {
   result <- result[,1] - result[,2]
   result <- sum(result)
   return(result)
+}
+
+evaluatePointDispersion <- function(file_base) {
+  points <- read.csv(paste0(file_base, ".filter_information.csv"))
+  points <- points[, colnames(points) %in% c("filter_run", "x_coord", "y_coord")]
+  points <- split(points, f = points$filter_run)
+  
+  octants <- lapply(points, calculateOctantNumbers)
+  sums <- lapply(octants, sum)
+  
+  octants <- subset(octants, sums != 0)
+  
+  deviation <- sapply(octants, computeDeviation)
+  zeroOctants <- sapply(octants, countZeroOctants)
+  
+  return(c("normalized deviation (avg)" = mean(deviation), "number of empty octants (avg)" = mean(zeroOctants)))
+}
+
+calculateOctantNumbers <- function(points) {
+  points <- points[points$x_coord != 0 | points$y_coord != 0, ! colnames(points) %in% c("filter_run")]
+  angles <- atan2(points$x_coord, points$y_coord) %% (2*pi)
+  firstOctant <- (angles >= 0 & angles < pi/8) | (angles < 2*pi & angles >= (-pi/8) %% (2*pi)) # between  -pi/8 and   pi/8
+  secondOctant <- angles >= pi/8 & angles < 3*pi/8                                             # between   pi/8 and  3pi/8
+  thirdOctant <- angles >= 3*pi/8 & angles < 5*pi/8                                            # between  3pi/8 and  5pi/8
+  fourthOctant <- angles >= 5*pi/8 & angles < 7*pi/8                                           # between  5pi/8 and  7pi/8
+  fifthOctant <- angles >= 7*pi/8 & angles < 9*pi/8                                            # between  7pi/8 and  9pi/8
+  sixthOctant <- angles >= 9*pi/8 & angles < 11*pi/8                                           # between  9pi/8 and 11pi/8
+  seventhOctant <- angles >= 11*pi/8 & angles < 13*pi/8                                        # between 11pi/8 and 13pi/8
+  eightOctant <- angles >= 13*pi/8 & angles < 15*pi/8                                          # between 13pi/8 and 15pi/8 (%% 2pi = -pi/8)
+  octantNumbers <- c(sum(firstOctant), sum(secondOctant), sum(thirdOctant), sum(fourthOctant),
+                     sum(fifthOctant), sum(sixthOctant), sum(seventhOctant), sum(eightOctant))
+  return(octantNumbers)
+}
+
+computeDeviation <- function(octantNumbers) {
+  totalPoints <- sum(octantNumbers)
+  deviation <- sum((octantNumbers/totalPoints - 1/8)^2)
+  
+  return(deviation)
+}
+
+countZeroOctants <- function(octantNumbers) {
+  zeroOctant <- octantNumbers == 0
+  return(sum(zeroOctant))
+}
+
+plotComparisons <- function(run_types, date, noRuns) {
+  for (run_type in run_types) {
+    for (i in (1:noRuns)) {
+      file_base <- paste0(date, "_", run_type, "_", i)
+      qualityStats <- quality(file_base)
+      performance <- overallPerfStats(file_base)
+    }
+  }
 }

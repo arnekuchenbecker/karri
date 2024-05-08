@@ -109,6 +109,8 @@
 
 #endif
 
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/LoggedFilter.h"
+
 #if KARRI_FILTER_STRATEGY == KARRI_FILTER_MAXIMUM_RANDOM
 
 #include "Algorithms/KaRRi/RequestState/PDLocFilters/MaximumNumberPDLocsFilter.h"
@@ -120,6 +122,14 @@
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_RELATIVE
 
 #include "Algorithms/KaRRi/RequestState/PDLocFilters/RelativeCHPDLocsFilter.h"
+
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_DIRECTIONAL
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/DirectionalParetoFilter.h"
+
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_SIMPLE
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/SimpleParetoFilter.h"
 
 #else //KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL
 
@@ -576,20 +586,29 @@ int main(int argc, char *argv[]) {
         DALSInsertionsFinderImpl dalsInsertionsFinder(dalsStrategy);
 
 #if KARRI_FILTER_STRATEGY == KARRI_FILTER_MAXIMUM_RANDOM
-        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, MaximumNumberPDLocsFilter>;
-        MaximumNumberPDLocsFilter filter(inputConfig.maxNumDropoffs);
+        using PDLocFilterImpl = LoggedFilter<MaximumNumberPDLocsFilter, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        MaximumNumberPDLocsFilter internal(inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_ABSOLUTE
-        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, AbsoluteCHPDLocsFilter<VehCHEnv, VehicleInputGraph>>;
-        AbsoluteCHPDLocsFilter filter(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
+        using PDLocFilterImpl = LoggedFilter<AbsoluteCHPDLocsFilter<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        AbsoluteCHPDLocsFilter internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_RELATIVE
-        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, RelativeCHPDLocsFilter<VehCHEnv, VehicleInputGraph>>;
-        RelativeCHPDLocsFilter filter(*vehChEnv, vehicleInputGraph, (double) inputConfig.maxNumDropoffs / 100);
+        using PDLocFilterImpl = LoggedFilter<RelativeCHPDLocsFilter<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        RelativeCHPDLocsFilter internal(*vehChEnv, vehicleInputGraph, (double) inputConfig.maxNumDropoffs / 100);
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_DIRECTIONAL
+        using MultiParameterParetoFilterImpl = DirectionalParetoFilter<VehCHEnv, VehicleInputGraph>;
+        using PDLocFilterImpl = LoggedFilter<MultiParameterParetoFilterImpl, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        MultiParameterParetoFilterImpl internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_SIMPLE
+        using ParetoFilterImpl = SimpleParetoFilter<VehCHEnv, VehicleInputGraph>;
+        using PDLocFilterImpl = LoggedFilter<ParetoFilterImpl, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        ParetoFilterImpl internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
 #else //KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL
-        std::cout << "Karri Filter Strategy: " << KARRI_FILTER_STRATEGY << std::endl;
-        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, AllPDLocsFilter>;
-        AllPDLocsFilter filter;
+        using PDLocFilterImpl = LoggedFilter<AllPDLocsFilter, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        AllPDLocsFilter internal;
 #endif
 
+        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, PDLocFilterImpl>;
+        PDLocFilterImpl filter(internal, vehicleInputGraph, *vehChEnv);
         RequestStateInitializerImpl requestStateInitializer(vehicleInputGraph, psgInputGraph, *vehChEnv, *psgChEnv,
                                                             reqState, inputConfig, vehicleToPdLocQuery, filter);
 

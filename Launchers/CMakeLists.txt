@@ -204,14 +204,18 @@ set(FILTER_ALL 1)
 set(FILTER_MAX_RANDOM 2)
 set(FILTER_CH_ABS 3)
 set(FILTER_CH_REL 4)
+set(FILTER_PARETO_DIR 5)
+set(FILTER_PARETO_SIMPLE 6)
 
 target_compile_definitions(karri PRIVATE KARRI_FILTER_ALL=${FILTER_ALL})
 target_compile_definitions(karri PRIVATE KARRI_FILTER_MAXIMUM_RANDOM=${FILTER_MAX_RANDOM})
 target_compile_definitions(karri PRIVATE KARRI_FILTER_CH_ABSOLUTE=${FILTER_CH_ABS})
 target_compile_definitions(karri PRIVATE KARRI_FILTER_CH_RELATIVE=${FILTER_CH_REL})
-set(KARRI_FILTER_STRAT_VALUES ALL MAX_RAND CH_ABS CH_REL)
+target_compile_definitions(karri PRIVATE KARRI_FILTER_PARETO_DIRECTIONAL=${FILTER_PARETO_DIR})
+target_compile_definitions(karri PRIVATE KARRI_FILTER_PARETO_SIMPLE=${FILTER_PARETO_SIMPLE})
+set(KARRI_FILTER_STRAT_VALUES ALL MAX_RAND CH_ABS CH_REL PARETO_DIR PARETO_SIMPLE)
 
-set(KARRI_FILTER_STRATEGY ALL CACHE STRING "Pickup-After-Last-Stop strategy to use. Possible values: ALL, MAX_RAND, CH_ABS, CH_REL")
+set(KARRI_FILTER_STRATEGY ALL CACHE STRING "Pickup-After-Last-Stop strategy to use. Possible values: ALL, MAX_RAND, CH_ABS, CH_REL, PARETO_DIR, PARETO_SIMPLE")
 set_property(CACHE KARRI_FILTER_STRATEGY PROPERTY STRINGS ${KARRI_FILTER_STRAT_VALUES})
 list(FIND KARRI_FILTER_STRAT_VALUES ${KARRI_FILTER_STRATEGY} index)
 if (index EQUAL -1)
@@ -220,12 +224,16 @@ endif ()
 
 if (${KARRI_FILTER_STRATEGY} STREQUAL MAX_RAND)
     target_compile_definitions(karri PRIVATE KARRI_FILTER_STRATEGY=${FILTER_MAX_RANDOM}) # Maximum Number Random Filter
-elseif(${KARRI_FILTER_STRATEGY} STREQUAL CH_ABS)
+elseif (${KARRI_FILTER_STRATEGY} STREQUAL CH_ABS)
     target_compile_definitions(karri PRIVATE KARRI_FILTER_STRATEGY=${FILTER_CH_ABS}) # Absolute number according to CH
-elseif(${KARRI_FILTER_STRATEGY} STREQUAL CH_REL)
+elseif (${KARRI_FILTER_STRATEGY} STREQUAL CH_REL)
     target_compile_definitions(karri PRIVATE KARRI_FILTER_STRATEGY=${FILTER_CH_REL}) # Relative filter according to CH
-else()
+elseif (${KARRI_FILTER_STRATEGY} STREQUAL PARETO_DIR)
+    target_compile_definitions(karri PRIVATE KARRI_FILTER_STRATEGY=${FILTER_PARETO_DIR}) # Directional Pareto Filter
+elseif (${KARRI_FILTER_STRATEGY} STREQUAL PARETO_SIMPLE)
+    target_compile_definitions(karri PRIVATE KARRI_FILTER_STRATEGY=${FILTER_PARETO_SIMPLE}) # Simple Pareto Filter
+else ()
     target_compile_definitions(karri PRIVATE KARRI_FILTER_STRATEGY=${FILTER_ALL}) # All PD Locs Filter
-endif()
+endif ()
 
 # End of KaRRi compile time parameters
