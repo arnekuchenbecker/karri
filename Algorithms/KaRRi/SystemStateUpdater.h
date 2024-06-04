@@ -118,7 +118,9 @@ namespace karri {
                   updatePerfLogger(LogManager<LoggerT>::getLogger(stats::UpdatePerformanceStats::LOGGER_NAME,
                                                                   "request_id, " +
                                                                   std::string(
-                                                                          stats::UpdatePerformanceStats::LOGGER_COLS))) {}
+                                                                          stats::UpdatePerformanceStats::LOGGER_COLS))),
+                  requestPDLogger(LogManager<LoggerT>::getLogger("request_pdLocs.csv", "request_id,origin,pickup,destination,dropoff\n")),
+                  possiblePDLogger(LogManager<LoggerT>::getLogger("possible_pdLocs.csv", "request_id,pd,location\n")) {}
 
 
         void insertBestAssignment(int &pickupStopId, int &dropoffStopId) {
@@ -230,6 +232,20 @@ namespace karri {
                     << vehDepTimeBeforeDropoff << ", "
                     << "false, "
                     << requestState.getBestCost() << "\n";
+
+            for (auto& pdLoc : requestState.pickups) {
+                possiblePDLogger << requestState.originalRequest.requestId << ",p," << inputGraph.edgeHead(pdLoc.loc) << "\n";
+            }
+
+            for (auto& pdLoc : requestState.dropoffs) {
+                possiblePDLogger << requestState.originalRequest.requestId << ",d," << inputGraph.edgeHead(pdLoc.loc) << "\n";
+            }
+
+            requestPDLogger << requestState.originalRequest.requestId << ","
+                    << inputGraph.edgeHead(requestState.originalRequest.origin) << ","
+                    << inputGraph.edgeHead(bestAsgn.pickup->loc) << ","
+                    << inputGraph.edgeHead(requestState.originalRequest.destination) << ","
+                    << inputGraph.edgeHead(bestAsgn.dropoff->loc) << "\n";
         }
 
         void writePerformanceLogs() {
@@ -370,6 +386,8 @@ namespace karri {
         LoggerT &palsPerfLogger;
         LoggerT &dalsPerfLogger;
         LoggerT &updatePerfLogger;
+        LoggerT &requestPDLogger;
+        LoggerT &possiblePDLogger;
 
     };
 }

@@ -272,3 +272,95 @@ plotComparisons <- function(run_types, date, noRuns) {
     }
   }
 }
+
+verifyHeuristics <- function(file_base) {
+  ranks <- read.csv(paste0(file_base, ".ranks.csv"))
+  bestAssignments <- read.csv(paste0(file_base, ".request_pdLocs.csv"))
+  pickups <- bestAssignments[, ! colnames(bestAssignments) %in% c("dropoff", "origin", "destination")]
+  dropoffs <- bestAssignments[, ! colnames(bestAssignments) %in% c("pickup", "origin", "destination")]
+  origins <- bestAssignments[, ! colnames(bestAssignments) %in% c("pickup", "dropoff", "destination")]
+  destinations <- bestAssignments[, ! colnames(bestAssignments) %in% c("pickup", "dropoff", "origin")]
+  
+  pickups <- merge(pickups, ranks, by.x = "pickup", by.y = "vertex_id", sort = FALSE)
+  dropoffs <- merge(dropoffs, ranks, by.x = "dropoff", by.y = "vertex_id")
+  origins <- merge(origins, ranks, by.x = "origin", by.y = "vertex_id")
+  destinations <- merge(destinations, ranks, by.x = "destination", by.y = "vertex_id")
+  
+  colnames(origins)[colnames(origins) == "rank"] <- "passenger_rank"
+  colnames(destinations)[colnames(destinations) == "rank"] <- "passenger_rank"
+  
+  avgRank <- apply(ranks, 2, mean)
+  avgPickupRank <- apply(pickups, 2, mean)
+  avgDropoffRank <- apply(dropoffs, 2, mean)
+  
+  print(paste0("Average Rank: ", avgRank[["rank"]]))
+  print(paste0("Average Pickup Rank: ", avgPickupRank[["rank"]]))
+  print(paste0("Average Dropoff Rank: ", avgDropoffRank[["rank"]]))
+  
+  print(sum(pickups[, colnames(pickups) == "rank"]))
+  
+  pickupProportion <- evaluatePDRankVersusPassengerRank(pickups[, ! colnames(pickups) %in% c("pickup")], origins[, ! colnames(origins) %in% c("origin")])
+  dropoffProportion <- evaluatePDRankVersusPassengerRank(dropoffs[, ! colnames(dropoffs) %in% c("dropoff")], destinations[, ! colnames(destinations) %in% c("destination")])
+  
+  print(paste0("Proportion of Pickup locations with higher rank than origin: ", pickupProportion))
+  print(paste0("Proportion of Dropoff locations with higher rank than destination: ", dropoffProportion))
+  
+  maxRanksAndDominators <- findMaxRanksAndDominators(file_base, ranks, pickups, dropoffs)
+  
+  evaluateMaxRankStats(maxRanksAndDominators[["pickups"]], "pickup locations")
+  evaluateMaxRankStats(maxRanksAndDominators[["dropoffs"]], "dropoff locations")
+}
+
+findMaxRanksAndDominators <- function(file_base, ranks, selectedPickups, selectedDropoffs) {
+  pdLocs <- read.csv(paste0(file_base, ".possible_pdLocs.csv"))
+  pdLocs <- merge(pdLocs,ranks,by.x = "location", by.y = "vertex_id")
+  
+  splitPDLocs <- split(pdLocs, f = pdLocs$request_id)
+  
+  splitPickups <- lapply(splitPDLocs, FUN = (\(x) x[x$pd == "p",]))
+  splitDropoffs <- lapply(splitPDLocs, FUN = (\(x) x[x$pd == "d",]))
+  
+  pickupRanks <- lapply(splitPickups, FUN = (\(x) x[,colnames(x) %in% c("rank", "request_id")]))
+  dropoffRanks <- lapply(splitDropoffs, FUN = (\(x) x[,colnames(x) %in% c("rank", "request_id")]))
+  
+  pickupMaxima <- lapply(pickupRanks, calculateMaxAndDominators, selectedPickups)
+  dropoffMaxima <- lapply(dropoffRanks, calculateMaxAndDominators, selectedDropoffs)
+  return(list(pickups=pickupMaxima, dropoffs=dropoffMaxima))
+}
+
+calculateMaxAndDominators <- function(data, selectedLocs) {
+  maximumRank <- max(data[,colnames(data) %in% c("rank")])
+  requestID <- data[[1,1]]
+  
+  rank <- selectedLocs[selectedLocs$request_id == requestID, colnames(selectedLocs) %in% c("rank")]
+  
+  dominators <- length(data[data$rank >= rank,colnames(data) %in% c("rank")])
+  
+  return(c(request_id=requestID,max_rank=maximumRank,selected_rank=rank,higher_ranks=dominators))
+}
+
+evaluateMaxRankStats <- function(data, usage) {
+  print(paste0("Statistics for ", usage))
+  
+  #How many (absolute) are higher or equal rank - avg, 80percentile, 90percentile, 95percentile
+  dominators <- sapply(data, (\(x) x["higher_ranks"]))
+  
+  dominatorStats <- c(avg=mean(dominators), quantile(dominators, 0.8), quantile(dominators, 0.9), quantile(dominators,0.95))
+  print("Parameters to be chosen for Absolute CH filter to ensure that on average / in 80/90/95 percent of the cases, the optimal solution is not filtered out:")
+  print(dominatorStats)
+  
+  #Within what percentage of the maximum is the selected - avg, 80percentile, 90percentile, 95percentile
+  percentages <- sapply(data, (\(x) 1 - x["selected_rank"] / x["max_rank"]))
+  
+  percentagesStats <- c(avg=mean(percentages), quantile(percentages, 0.8), quantile(percentages, 0.9), quantile(percentages,0.95))
+  print("Parameters to be chosen for Relative CH filter to ensure that on average / in 80/90/95 percent of the cases, the optimal solution is not filtered out:")
+  print(percentagesStats)
+}
+
+evaluatePDRankVersusPassengerRank <- function(selected, passenger) {
+  combined <- merge(selected, passenger, by.x = "request_id", by.y = "request_id")
+  
+  above <- apply(combined, 1, (\(x) if (x[["rank"]] > x[["passenger_rank"]]) 1 else 0))
+  
+  return(mean(above))
+}

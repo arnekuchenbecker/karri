@@ -612,6 +612,12 @@ int main(int argc, char *argv[]) {
         RequestStateInitializerImpl requestStateInitializer(vehicleInputGraph, psgInputGraph, *vehChEnv, *psgChEnv,
                                                             reqState, inputConfig, vehicleToPdLocQuery, filter);
 
+        // Log ranks for analysis
+        auto& rankLogger = LogManager<std::ofstream>::getLogger("ranks.csv", "vertex_id,rank\n");
+        FORALL_VERTICES(vehicleInputGraph, v) {
+            rankLogger << v << "," << vehChEnv->getCH().rank(v) << "\n";
+        }
+
 
         using InsertionFinderImpl = AssignmentFinder<RequestStateInitializerImpl,
                 EllipticBCHSearchesImpl,
