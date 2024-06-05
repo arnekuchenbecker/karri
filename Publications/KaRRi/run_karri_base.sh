@@ -35,8 +35,8 @@ echo "Using timeout of ${timeout}."
 inputDir=/global_data/laupichler/KaRRi/Inputs
 vehGraph=$inputDir/Graphs/${instanceName}_pedestrian_veh.gr.bin
 psgGraph=$inputDir/Graphs/${instanceName}_pedestrian_psg.gr.bin
-vehicles=$inputDir/Vehicles/$instanceName.csv
-requests=$inputDir/Requests/$instanceName.csv
+vehicles=$inputDir/Vehicles/${instanceName}_pedestrian.csv
+requests=$inputDir/Requests/${instanceName}_pedestrian.csv
 vehCh=$inputDir/CHs/${instanceName}_pedestrian_veh_time.ch.bin
 psgCh=$inputDir/CHs/${instanceName}_pedestrian_psg_time.ch.bin
 sepDecomp=$inputDir/SepDecomps/${instanceName}_nd30.sep.bin
