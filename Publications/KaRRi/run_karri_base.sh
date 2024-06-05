@@ -33,10 +33,12 @@ echo "Using timeout of ${timeout}."
 
 # Hard-gecodete Orte für Inputs
 inputDir=/global_data/laupichler/KaRRi/Inputs
-graph=$inputDir/Graphs/${instanceName}.gr.bin
+vehGraph=$inputDir/Graphs/${instanceName}_pedestrian_veh.gr.bin
+psgGraph=$inputDir/Graphs/${instanceName}_pedestrian_psg.gr.bin
 vehicles=$inputDir/Vehicles/$instanceName.csv
 requests=$inputDir/Requests/$instanceName.csv
-ch=$inputDir/CHs/${instanceName}_time.ch.bin
+vehCh=$inputDir/CHs/${instanceName}_pedestrian_veh_time.ch.bin
+psgCh=$inputDir/CHs/${instanceName}_pedestrian_psg_time.ch.bin
 sepDecomp=$inputDir/SepDecomps/${instanceName}_nd30.sep.bin
 
 # Erzeuge konkretes Output-Directory, dessen Name aus instanceName + aktuellem timestamp besteht.
@@ -67,7 +69,7 @@ do
 # Run pedestrian/KaRRi, radius 300, wait time 300
 # ID, um zwischen 5 runs zu unterscheiden
 run_id=KaRRi_run$i
-timeout $timeout taskset 0x1 $binaryDir/Launchers/karri -w 300 -p-radius 300 -d-radius 300 -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/$run_id
+timeout $timeout taskset 0x1 $karriBinaryDir/Launchers/karri -w 300 -p-radius 300 -d-radius 300 -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/$run_id
 
 done
 
