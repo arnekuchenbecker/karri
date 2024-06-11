@@ -6,6 +6,7 @@
 #	- <source-dir> : absoluter Pfad zum untersten Ordner deines Repository, also wahrscheinlich sowas wie /home/kuchenbecker/karri/
 # 	- <instance-name> : entweder Berlin-1pct oder Berlin-10pct
 #	- <output-base-dir> : absoluter Pfad zu frei gewähltem Output-Ordner, z.B. /home/kuchenbecker/Outputs/ (Ordner muss bereits vor Aufruf existieren)
+#	- <radius> : Radius, in dem PDLocs gesucht werden (in Sekunden). Üblicherweise 300.
 #	- [timeout]: optionales timeout für jeden Run in Sekunden
 
 # Zur Erinnerung, was die Präfixe bedeuten:
@@ -16,7 +17,8 @@
 karriSourceDir=$1
 instanceName=$2
 outputBaseDir=$3
-timeout=$4
+radius=$4
+timeout=$5
 
 # Prüfe, ob Output Directory existiert
 if ! [ -d "$outputBaseDir" ]; then
@@ -41,6 +43,9 @@ vehCh=$inputDir/CHs/${instanceName}_pedestrian_veh_time.ch.bin
 psgCh=$inputDir/CHs/${instanceName}_pedestrian_psg_time.ch.bin
 sepDecomp=$inputDir/SepDecomps/${instanceName}_nd30.sep.bin
 
+# Defines for different Filter Strategies
+heuristics=("ALL" "MAX_RAND" "CH_ABS" "CH_REL" "PARETO_SIMPLE" "PARETO_DIR")
+
 # Erzeuge konkretes Output-Directory, dessen Name aus instanceName + aktuellem timestamp besteht.
 currentTime=$(date "+%Y.%m.%d-%H:%M")
 karriOutputDir=$outputBaseDir/LOUD/${instanceName}_${currentTime}
@@ -48,6 +53,10 @@ mkdir -p $karriOutputDir
 
 # Baue KaRRi nach $karriSourceDir/Build/Release; gib explizit hard-gecodeten Ort der dependencies an.
 # Konfiguriere KaRRi, sodass individual last-stop BCH Searches und kein SIMD-Parallelismus verwendet werden.
+
+for strat in ${heuristics[@]}
+do
+
 karriBinaryDir=$karriSourceDir/Build/Release
 dependencyInstallDir=/global_data/laupichler/KaRRi/install
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${dependencyInstallDir}"\
@@ -58,18 +67,25 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${dependencyInstallDir}"\
 	-DKARRI_PSG_COST_SCALE=1 \
 	-DKARRI_VEH_COST_SCALE=1 \
 	-DKARRI_FILTER_STRATEGY=CH_ABS \
-	-S $karriSourceDir -B $karriBinaryDir
-cmake --build $karriBinaryDir --target karri -j 16
+	-S $karriSourceDir -B ${karriBinaryDir}_$strat
+cmake --build ${karriBinaryDir}_strat --target karri -j 16
+
+done
 
 
 # Lasse KaRRi 5 Mal laufen (nur relevant für Laufzeitmessungen, für Qualität reicht ein Run)
 for i in {1..5}
 do
 
+for strat in ${heuristics[@]}
+do
+
 # Run pedestrian/KaRRi, radius 300, wait time 300
 # ID, um zwischen 5 runs zu unterscheiden
 run_id=KaRRi_run$i
-timeout $timeout taskset 0x1 $karriBinaryDir/Launchers/karri -w 300 -p-radius 300 -d-radius 300 -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/$run_id
+timeout $timeout taskset 0x1 ${karriBinaryDir}_$strat/Launchers/karri -w 300 -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/${run_id}_$strat
+
+done
 
 done
 
