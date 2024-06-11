@@ -68,7 +68,7 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${dependencyInstallDir}"\
 	-DKARRI_VEH_COST_SCALE=1 \
 	-DKARRI_FILTER_STRATEGY=CH_ABS \
 	-S $karriSourceDir -B ${karriBinaryDir}_$strat
-cmake --build ${karriBinaryDir}_strat --target karri -j 16
+cmake --build ${karriBinaryDir}_${strat} --target karri -j 16
 
 done
 
