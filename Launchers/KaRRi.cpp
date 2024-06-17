@@ -65,6 +65,7 @@
 #include "Algorithms/KaRRi/AssignmentFinder.h"
 #include "Algorithms/KaRRi/SystemStateUpdater.h"
 #include "Algorithms/KaRRi/EventSimulation.h"
+#include "Tools/Logging/NullLogger.h"
 
 #ifdef KARRI_USE_CCHS
 #include "Algorithms/KaRRi/CCHEnvironment.h"
