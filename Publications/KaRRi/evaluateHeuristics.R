@@ -15,15 +15,23 @@ compare_quality <- function(file_base) {
   for (strat in runs) {
     strat_results <- list()
     for (k in run_params[[strat]]) {
-      for (run in 1:5){
-        if(run == 1) {
-          run_file_base <- paste0(file_base, "/", strat, "_", k, "_KaRRi_run", run)
-          run_quality <- quality(run_file_base)
-          strat_results[[paste0(k)]] <- run_quality[["trip_time_avg"]]
-        }
-      }
+      run_file_base <- paste0(file_base, "KaRRi_run", 1, "_", strat)
+      print(run_file_base)
+      run_quality <- quality(run_file_base)
+      strat_results[[paste0(k)]] <- run_quality[["trip_time_avg"]]
     }
     result[[strat]] <- strat_results
   }
   return(result)
+}
+
+print_overall_perf_stats <- function(file_base) {
+  for (strat in runs) {
+    for (k in run_params[[strat]]) {
+      run_file_base <- paste0(file_base, "KaRRi_run", 1, "_", strat)
+      print(run_file_base)
+      stats <- overallPerfStats(run_file_base)
+      print(stats)
+    }
+  }
 }
