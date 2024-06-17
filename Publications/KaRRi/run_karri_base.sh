@@ -21,7 +21,7 @@ radius=$4
 timeout=$5
 
 # Farben für Konsolen-Output
-green='\033[0;32'
+green='\033[0;32m'
 no_color='\033[0m'
 
 # Prüfe, ob Output Directory existiert
@@ -70,8 +70,8 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${dependencyInstallDir}"\
 	-DKARRI_PD_DISTANCES_USE_SIMD=ON -DKARRI_PD_DISTANCES_LOG_K=5 \
 	-DKARRI_PSG_COST_SCALE=1 \
 	-DKARRI_VEH_COST_SCALE=1 \
-	-DKARRI_FILTER_STRATEGY=$strat \
-	-S $karriSourceDir -B ${karriBinaryDir}_$strat
+	-DKARRI_FILTER_STRATEGY=${strat} \
+	-S $karriSourceDir -B ${karriBinaryDir}_${strat}
 cmake --build ${karriBinaryDir}_${strat} --target karri -j 16
 
 done
