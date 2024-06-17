@@ -386,8 +386,8 @@ namespace karri {
         LoggerT &palsPerfLogger;
         LoggerT &dalsPerfLogger;
         LoggerT &updatePerfLogger;
-        LoggerT &requestPDLogger;
-        LoggerT &possiblePDLogger;
+        NullLogger &requestPDLogger;
+        NullLogger &possiblePDLogger;
 
     };
 }
