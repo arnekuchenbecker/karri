@@ -70,7 +70,7 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${dependencyInstallDir}"\
 	-DKARRI_PD_DISTANCES_USE_SIMD=ON -DKARRI_PD_DISTANCES_LOG_K=5 \
 	-DKARRI_PSG_COST_SCALE=1 \
 	-DKARRI_VEH_COST_SCALE=1 \
-	-DKARRI_FILTER_STRATEGY=CH_ABS \
+	-DKARRI_FILTER_STRATEGY=$strat \
 	-S $karriSourceDir -B ${karriBinaryDir}_$strat
 cmake --build ${karriBinaryDir}_${strat} --target karri -j 16
 
