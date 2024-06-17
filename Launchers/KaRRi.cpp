@@ -586,23 +586,29 @@ int main(int argc, char *argv[]) {
         DALSInsertionsFinderImpl dalsInsertionsFinder(dalsStrategy);
 
 #if KARRI_FILTER_STRATEGY == KARRI_FILTER_MAXIMUM_RANDOM
+        std::cout << "Using Filter Strategy MAX_RAND with parameter " << inputConfig.maxNumDropoffs << std::endl;
         using PDLocFilterImpl = LoggedFilter<MaximumNumberPDLocsFilter, VehicleInputGraph, VehCHEnv, std::ofstream>;
         MaximumNumberPDLocsFilter internal(inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_ABSOLUTE
+        std::cout << "Using Filter Strategy CH_ABS with parameter " << inputConfig.maxNumDropoffs << std::endl;
         using PDLocFilterImpl = LoggedFilter<AbsoluteCHPDLocsFilter<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, std::ofstream>;
         AbsoluteCHPDLocsFilter internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_RELATIVE
+        std::cout << "Using Filter Strategy CH_REL with parameter " << inputConfig.maxNumDropoffs << std::endl;
         using PDLocFilterImpl = LoggedFilter<RelativeCHPDLocsFilter<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, std::ofstream>;
         RelativeCHPDLocsFilter internal(*vehChEnv, vehicleInputGraph, (double) inputConfig.maxNumDropoffs / 100);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_DIRECTIONAL
+        std::cout << "Using Filter Strategy PARETO_DIR with parameter " << inputConfig.maxNumDropoffs << std::endl;
         using MultiParameterParetoFilterImpl = DirectionalParetoFilter<VehCHEnv, VehicleInputGraph>;
         using PDLocFilterImpl = LoggedFilter<MultiParameterParetoFilterImpl, VehicleInputGraph, VehCHEnv, std::ofstream>;
         MultiParameterParetoFilterImpl internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_SIMPLE
+        std::cout << "Using Filter Strategy PARETO_SIMPLE with parameter " << inputConfig.maxNumDropoffs << std::endl;
         using ParetoFilterImpl = SimpleParetoFilter<VehCHEnv, VehicleInputGraph>;
         using PDLocFilterImpl = LoggedFilter<ParetoFilterImpl, VehicleInputGraph, VehCHEnv, std::ofstream>;
         ParetoFilterImpl internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
 #else //KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL
+        std::cout << "Using Filter Strategy ALL with parameter " << inputConfig.maxNumDropoffs << std::endl;
         using PDLocFilterImpl = LoggedFilter<AllPDLocsFilter, VehicleInputGraph, VehCHEnv, std::ofstream>;
         AllPDLocsFilter internal;
 #endif
