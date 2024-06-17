@@ -119,8 +119,8 @@ namespace karri {
                                                                   "request_id, " +
                                                                   std::string(
                                                                           stats::UpdatePerformanceStats::LOGGER_COLS))),
-                  requestPDLogger(LogManager<LoggerT>::getLogger("request_pdLocs.csv", "request_id,origin,pickup,destination,dropoff\n")),
-                  possiblePDLogger(LogManager<LoggerT>::getLogger("possible_pdLocs.csv", "request_id,pd,location\n")) {}
+                  requestPDLogger(LogManager<NullLogger>::getLogger("request_pdLocs.csv", "request_id,origin,pickup,destination,dropoff\n")),
+                  possiblePDLogger(LogManager<NullLogger>::getLogger("possible_pdLocs.csv", "request_id,pd,location\n")) {}
 
 
         void insertBestAssignment(int &pickupStopId, int &dropoffStopId) {
