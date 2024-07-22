@@ -66,6 +66,7 @@
 #include "Algorithms/KaRRi/SystemStateUpdater.h"
 #include "Algorithms/KaRRi/EventSimulation.h"
 #include "Tools/Logging/NullLogger.h"
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/CHCoverCheck.h"
 
 #ifdef KARRI_USE_CCHS
 #include "Algorithms/KaRRi/CCHEnvironment.h"
@@ -598,6 +599,8 @@ int main(int argc, char *argv[]) {
         std::cout << "Using Filter Strategy CH_REL with parameter " << inputConfig.maxNumDropoffs << std::endl;
         using PDLocFilterImpl = LoggedFilter<RelativeCHPDLocsFilter<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, NullLogger>;
         RelativeCHPDLocsFilter internal(*vehChEnv, vehicleInputGraph, (double) inputConfig.maxNumDropoffs / 100);
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_COVER
+        std::cout << "Using Filter Strategy CH_COVER" << std::endl;
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_DIRECTIONAL
         std::cout << "Using Filter Strategy PARETO_DIR with parameter " << inputConfig.maxNumDropoffs << std::endl;
         using MultiParameterParetoFilterImpl = DirectionalParetoFilter<VehCHEnv, VehicleInputGraph>;
@@ -608,6 +611,12 @@ int main(int argc, char *argv[]) {
         using ParetoFilterImpl = SimpleParetoFilter<VehCHEnv, VehicleInputGraph>;
         using PDLocFilterImpl = LoggedFilter<ParetoFilterImpl, VehicleInputGraph, VehCHEnv, NullLogger>;
         ParetoFilterImpl internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL_VERBOSE
+        std::cout << "Using Filter Strategy ALL with verbose logging" << std::endl;
+        using LoggedFilterImpl = LoggedFilter<AllPDLocsFilter, VehicleInputGraph, VehCHEnv, NullLogger>;
+        using PDLocFilterImpl = CHCoverCheck<LoggedFilterImpl, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        AllPDLocsFilter allPdLocsFilter;
+        LoggedFilterImpl internal(allPdLocsFilter, vehicleInputGraph, *vehChEnv);
 #else //KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL
         std::cout << "Using Filter Strategy ALL with parameter " << inputConfig.maxNumDropoffs << std::endl;
         using PDLocFilterImpl = LoggedFilter<AllPDLocsFilter, VehicleInputGraph, VehCHEnv, NullLogger>;
@@ -648,7 +657,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 
-        using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, LastStopBucketsEnv, CurVehLocToPickupSearchesImpl, VehPathTracker, std::ofstream>;
+        using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, LastStopBucketsEnv, CurVehLocToPickupSearchesImpl, VehPathTracker, std::ofstream, NullLogger>;
         SystemStateUpdaterImpl systemStateUpdater(vehicleInputGraph, reqState, inputConfig, curVehLocToPickupSearches,
                                                   pathTracker, routeState, ellipticBucketsEnv, lastStopBucketsEnv,
                                                   lastStopsAtVertices);

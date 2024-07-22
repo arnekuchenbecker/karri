@@ -23,31 +23,7 @@ convertToHHMM <- function(seconds) {
 # this function returns an overview over the solution quality of the assignments.
 quality <- function(file_base) {
   
-  asgnstats <- read.csv(paste0(file_base, ".assignmentquality.csv"))
-  legstats <- read.csv(paste0(file_base, ".legstats.csv"))
-  
-  eventsimstats <- read.csv(paste0(file_base, ".eventsimulationstats.csv"))
-  num.Vehicles <- sum(eventsimstats$type == "VehicleStartup")
-  
-  df <- data.frame(
-             wait_time_avg = c(mean(asgnstats$wait_time) / 10), # avg wait time for each request
-             wait_time_q95 = c(quantile(asgnstats$wait_time, 0.95) / 10), # q95 wait time for each request
-             ride_time_avg = c(mean(asgnstats$ride_time) / 10), # avg ride time for each request
-             ride_time_q95 = c(quantile(asgnstats$ride_time, 0.95) / 10), # q95 ride time for each request
-             trip_time_avg = c(mean(asgnstats$trip_time) / 10), # avg trip time for each request
-             trip_time_q95 = c(quantile(asgnstats$trip_time, 0.95) / 10), # q95 trip time for each request
-             walk_to_pickup_avg=c(mean(asgnstats$walk_to_pickup_time) / 10), # avg walking time to pickup
-             walk_to_pickup_q95=c(quantile(asgnstats$walk_to_pickup_time, 0.95) / 10), # q95 walking time to pickup
-             walk_to_dropoff_avg=c(mean(asgnstats$walk_to_dropoff_time) / 10), # avg walking time to dropoff
-             walk_to_dropoff_q95=c(quantile(asgnstats$walk_to_dropoff_time, 0.95) / 10), # q95 walking time to dropoff
-             stop_time_avg = c(sum(legstats$stop_time) / num.Vehicles / 10), # avg total stop time for each vehicle
-             empty_time_avg = c(sum(legstats[legstats$occupancy == 0, "drive_time"]) / num.Vehicles / 10), # avg time spent driving empty for each vehicle
-             occ_time_avg = c(sum(legstats[legstats$occupancy > 0, "drive_time"]) / num.Vehicles / 10) # avg time spent driving occupied for each vehicle
-             )
-  
-  df$op_time_avg <- df$stop_time_avg + df$empty_time_avg + df$occ_time_avg # avg total operation time for each vehicle
-  df$occ_rate_avg <- sum(legstats$drive_time * legstats$occupancy) / sum(legstats$drive_time) # avg occupation rate while driving for each vehicle
-  df$cost <- mean(asgnstats$cost) # avg cost (according to cost function used in KaRRi) for each vehicle
+  df <- getQualityStats(file_base)
   
   # Reformat passenger times to MM:SS
   psg_time_cols <- c("wait_time_avg", "wait_time_q95", 
@@ -63,6 +39,38 @@ quality <- function(file_base) {
   df[, colnames(df) %in% veh_time_cols] <- convertToHHMM(df[, colnames(df) %in% veh_time_cols])
   
   print(df)
+}
+
+getQualityStats <- function(file_base) {
+  
+  asgnstats <- read.csv(paste0(file_base, ".assignmentquality.csv"))
+  legstats <- read.csv(paste0(file_base, ".legstats.csv"))
+  
+  eventsimstats <- read.csv(paste0(file_base, ".eventsimulationstats.csv"))
+  num.Vehicles <- sum(eventsimstats$type == "VehicleStartup")
+  
+  df <- data.frame(
+    wait_time_avg = c(mean(asgnstats$wait_time) / 10), # avg wait time for each request
+    wait_time_q95 = c(quantile(asgnstats$wait_time, 0.95) / 10), # q95 wait time for each request
+    ride_time_avg = c(mean(asgnstats$ride_time) / 10), # avg ride time for each request
+    ride_time_q95 = c(quantile(asgnstats$ride_time, 0.95) / 10), # q95 ride time for each request
+    trip_time_avg = c(mean(asgnstats$trip_time) / 10), # avg trip time for each request
+    trip_time_q95 = c(quantile(asgnstats$trip_time, 0.95) / 10), # q95 trip time for each request
+    walk_to_pickup_avg=c(mean(asgnstats$walk_to_pickup_time) / 10), # avg walking time to pickup
+    walk_to_pickup_q95=c(quantile(asgnstats$walk_to_pickup_time, 0.95) / 10), # q95 walking time to pickup
+    walk_to_dropoff_avg=c(mean(asgnstats$walk_to_dropoff_time) / 10), # avg walking time to dropoff
+    walk_to_dropoff_q95=c(quantile(asgnstats$walk_to_dropoff_time, 0.95) / 10), # q95 walking time to dropoff
+    stop_time_avg = c(sum(legstats$stop_time) / num.Vehicles / 10), # avg total stop time for each vehicle
+    empty_time_avg = c(sum(legstats[legstats$occupancy == 0, "drive_time"]) / num.Vehicles / 10), # avg time spent driving empty for each vehicle
+    occ_time_avg = c(sum(legstats[legstats$occupancy > 0, "drive_time"]) / num.Vehicles / 10) # avg time spent driving occupied for each vehicle
+  )
+  
+  df$op_time_avg <- df$stop_time_avg + df$empty_time_avg + df$occ_time_avg # avg total operation time for each vehicle
+  df$occ_rate_avg <- sum(legstats$drive_time * legstats$occupancy) / sum(legstats$drive_time) # avg occupation rate while driving for each vehicle
+  df$cost <- mean(asgnstats$cost) # avg cost (according to cost function used in KaRRi) for each vehicle
+  
+  return(df)
+  
 }
 
 # Given the paths to the result files of two KaRRi runs, this functions checks
@@ -363,4 +371,11 @@ evaluatePDRankVersusPassengerRank <- function(selected, passenger) {
   above <- apply(combined, 1, (\(x) if (x[["rank"]] > x[["passenger_rank"]]) 1 else 0))
   
   return(mean(above))
+}
+
+vertexCover <- function(file_base) {
+  covered <- read.csv(paste0(file_base, ".vertices_covered.csv"))
+  covered <- covered[,! colnames(covered) %in% c("filter_run")]
+  mean_cover <- apply(covered, 2, mean)
+  return(mean_cover)
 }

@@ -38,7 +38,8 @@ namespace karri {
             typename LastStopBucketsEnvT,
             typename CurVehLocsT,
             typename PathTrackerT,
-            typename LoggerT = NullLogger>
+            typename LoggerT = NullLogger,
+            typename VerboseLoggerT = NullLogger>
     class SystemStateUpdater {
 
     public:
@@ -119,8 +120,8 @@ namespace karri {
                                                                   "request_id, " +
                                                                   std::string(
                                                                           stats::UpdatePerformanceStats::LOGGER_COLS))),
-                  requestPDLogger(LogManager<NullLogger>::getLogger("request_pdLocs.csv", "request_id,origin,pickup,destination,dropoff\n")),
-                  possiblePDLogger(LogManager<NullLogger>::getLogger("possible_pdLocs.csv", "request_id,pd,location\n")) {}
+                  requestPDLogger(LogManager<VerboseLoggerT>::getLogger("request_pdLocs.csv", "request_id,origin,pickup,destination,dropoff\n")),
+                  possiblePDLogger(LogManager<VerboseLoggerT>::getLogger("possible_pdLocs.csv", "request_id,pd,location\n")) {}
 
 
         void insertBestAssignment(int &pickupStopId, int &dropoffStopId) {
@@ -386,8 +387,8 @@ namespace karri {
         LoggerT &palsPerfLogger;
         LoggerT &dalsPerfLogger;
         LoggerT &updatePerfLogger;
-        NullLogger &requestPDLogger;
-        NullLogger &possiblePDLogger;
+        VerboseLoggerT &requestPDLogger;
+        VerboseLoggerT &possiblePDLogger;
 
     };
 }
