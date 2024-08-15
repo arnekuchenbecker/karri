@@ -271,3 +271,56 @@ plotVehicleComparison <- function(first_qualities, first_stats, first_vehicles, 
   
   print(plt)
 }
+
+compareCoverStrategy <- function(file_base_cover, file_base_abs, file_base_rand) {
+  cover_quality_300 <- getQualityStats(paste0(file_base_cover, "_", 300))
+  abs_quality_300 <- getQualityStats(paste0(file_base_abs, "_", 300))
+  rand_quality_300 <- getQualityStats(paste0(file_base_rand, "_", 300))
+  cover_quality_600 <- getQualityStats(paste0(file_base_cover, "_", 600))
+  abs_quality_600 <- getQualityStats(paste0(file_base_abs, "_", 600))
+  rand_quality_600 <- getQualityStats(paste0(file_base_rand, "_", 600))
+  
+  cover_stats_300 <- overallPerfStats(paste0(file_base_cover, "_", 300))
+  abs_stats_300 <- overallPerfStats(paste0(file_base_abs, "_", 300))
+  rand_stats_300 <- overallPerfStats(paste0(file_base_rand, "_", 300))
+  cover_stats_600 <- overallPerfStats(paste0(file_base_cover, "_", 600))
+  abs_stats_600 <- overallPerfStats(paste0(file_base_abs, "_", 600))
+  rand_stats_600 <- overallPerfStats(paste0(file_base_rand, "_", 600))
+  
+  strats <- c("Cover", "Abs", "Rand", "Cover", "Abs", "Rand")
+  radii <- c("300", "300", "300", "600", "600", "600")
+  trip_times <- c(cover_quality_300$trip_time_avg, abs_quality_300$trip_time_avg, rand_quality_300$trip_time_avg,
+                  cover_quality_600$trip_time_avg, abs_quality_600$trip_time_avg, rand_quality_600$trip_time_avg)
+  op_times <- c(cover_quality_300$op_time_avg, abs_quality_300$op_time_avg, rand_quality_300$op_time_avg,
+                cover_quality_600$op_time_avg, abs_quality_600$op_time_avg, rand_quality_600$op_time_avg)
+  empty_times <- c(cover_quality_300$empty_time_avg, abs_quality_300$empty_time_avg, rand_quality_300$empty_time_avg,
+                   cover_quality_600$empty_time_avg, abs_quality_600$empty_time_avg, rand_quality_600$empty_time_avg)
+  times <- c(cover_stats_300[["total_time"]], abs_stats_300[["total_time"]], rand_stats_300[["total_time"]],
+             cover_stats_600[["total_time"]], abs_stats_600[["total_time"]], rand_stats_600[["total_time"]])
+  
+  df <- data.frame(strats, trip_times, op_times, empty_times, times)
+  
+  plt_trip_time <- ggplot(df, aes(x=times, y=trip_times)) +
+    geom_point(aes(color=strats, shape=radii), size=3) + 
+    theme_linedraw() +
+    scale_x_continuous(labels = label_comma()) +
+    ggtitle("Avg Trip Time")
+  
+  print(plt_trip_time)
+  
+  plt_op_time <- ggplot(df, aes(x=times, y=op_times)) +
+    geom_point(aes(color=strats, shape=radii), size=3) + 
+    theme_linedraw() +
+    scale_x_continuous(labels = label_comma()) +
+    ggtitle("Avg Operation Time")
+  
+  print(plt_op_time)
+  
+  plt_empty_time <- ggplot(df, aes(x=times, y=empty_times)) +
+    geom_point(aes(color=strats, shape=radii), size=3) + 
+    theme_linedraw() +
+    scale_x_continuous(labels = label_comma()) +
+    ggtitle("Avg Empty Time")
+  
+  print(plt_empty_time)
+}
