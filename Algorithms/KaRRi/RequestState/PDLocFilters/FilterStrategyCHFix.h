@@ -8,9 +8,9 @@ namespace karri {
      * contraction order of the given CH) and second by increasing walking distance.
      */
     template<typename VehCHEnv, typename VehicleInputGraph>
-    class AbsoluteCHPDLocsFilter {
+    class FilterStrategyCHFix {
     public:
-        AbsoluteCHPDLocsFilter(const VehCHEnv &chEnv, const VehicleInputGraph &graph, const int maximum)
+        FilterStrategyCHFix(const VehCHEnv &chEnv, const VehicleInputGraph &graph, const int maximum)
                 : ch(chEnv.getCH()),
                   graph(graph),
                   maximum(maximum) {}

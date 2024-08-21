@@ -7,9 +7,9 @@ namespace karri {
      * This filter decreases the number of PD Locs by limiting the amount to the given maximum. PD Locs to be excluded
      * are determined randomly.
      */
-     class MaximumNumberPDLocsFilter {
+     class FilterStrategyRandom {
      public:
-         MaximumNumberPDLocsFilter(const int maximum) : maximum(maximum), rand(seed) {}
+         FilterStrategyRandom(const int maximum) : maximum(maximum), rand(seed) {}
 
          void filter(std::vector<PDLoc>& pdLocs) {
              if (maximum > 1 && pdLocs.size() > maximum) {

@@ -4,9 +4,9 @@
 
 namespace karri {
     template<typename VehCHEnv, typename VehicleInputGraph>
-    class RelativeCHPDLocsFilter {
+    class FilterStrategyCHDyn {
     public:
-        RelativeCHPDLocsFilter(VehCHEnv& chEnv, VehicleInputGraph& graph, const double percentage)
+        FilterStrategyCHDyn(VehCHEnv& chEnv, VehicleInputGraph& graph, const double percentage)
             : ch(chEnv.getCH()),
               graph(graph),
               percentage(percentage) {}

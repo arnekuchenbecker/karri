@@ -115,15 +115,15 @@
 
 #if KARRI_FILTER_STRATEGY == KARRI_FILTER_MAXIMUM_RANDOM
 
-#include "Algorithms/KaRRi/RequestState/PDLocFilters/MaximumNumberPDLocsFilter.h"
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/FilterStrategyRandom.h"
 
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_ABSOLUTE
 
-#include "Algorithms/KaRRi/RequestState/PDLocFilters/AbsoluteCHPDLocsFilter.h"
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/FilterStrategyCHFix.h"
 
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_RELATIVE
 
-#include "Algorithms/KaRRi/RequestState/PDLocFilters/RelativeCHPDLocsFilter.h"
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/FilterStrategyCHDyn.h"
 
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_COVER
 
@@ -135,7 +135,7 @@
 
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_SIMPLE
 
-#include "Algorithms/KaRRi/RequestState/PDLocFilters/SimpleParetoFilter.h"
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/FilterStrategyPareto.h"
 
 #else //KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL or KARRI_FILTER_ALL_VERBOSE
 
@@ -593,16 +593,16 @@ int main(int argc, char *argv[]) {
 
 #if KARRI_FILTER_STRATEGY == KARRI_FILTER_MAXIMUM_RANDOM
         std::cout << "Using Filter Strategy MAX_RAND with parameter " << inputConfig.maxNumDropoffs << std::endl;
-        using PDLocFilterImpl = LoggedFilter<MaximumNumberPDLocsFilter, VehicleInputGraph, VehCHEnv, NullLogger>;
-        MaximumNumberPDLocsFilter internal(inputConfig.maxNumDropoffs);
+        using PDLocFilterImpl = LoggedFilter<FilterStrategyRandom, VehicleInputGraph, VehCHEnv, NullLogger>;
+        FilterStrategyRandom internal(inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_ABSOLUTE
         std::cout << "Using Filter Strategy CH_ABS with parameter " << inputConfig.maxNumDropoffs << std::endl;
-        using PDLocFilterImpl = LoggedFilter<AbsoluteCHPDLocsFilter<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, NullLogger>;
-        AbsoluteCHPDLocsFilter internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
+        using PDLocFilterImpl = LoggedFilter<FilterStrategyCHFix<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, NullLogger>;
+        FilterStrategyCHFix internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_RELATIVE
         std::cout << "Using Filter Strategy CH_REL with parameter " << inputConfig.maxNumDropoffs << std::endl;
-        using PDLocFilterImpl = LoggedFilter<RelativeCHPDLocsFilter<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, NullLogger>;
-        RelativeCHPDLocsFilter internal(*vehChEnv, vehicleInputGraph, (double) inputConfig.maxNumDropoffs / 100);
+        using PDLocFilterImpl = LoggedFilter<FilterStrategyCHDyn<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, NullLogger>;
+        FilterStrategyCHDyn internal(*vehChEnv, vehicleInputGraph, (double) inputConfig.maxNumDropoffs / 100);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_COVER
         std::cout << "Using Filter Strategy CH_COVER" << std::endl;
         using PDLocFilterImpl = LoggedFilter<CHCoverFilter<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, NullLogger>;
@@ -614,7 +614,7 @@ int main(int argc, char *argv[]) {
         MultiParameterParetoFilterImpl internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_SIMPLE
         std::cout << "Using Filter Strategy PARETO_SIMPLE with parameter " << inputConfig.maxNumDropoffs << std::endl;
-        using ParetoFilterImpl = SimpleParetoFilter<VehCHEnv, VehicleInputGraph>;
+        using ParetoFilterImpl = FilterStrategyPareto<VehCHEnv, VehicleInputGraph>;
         using PDLocFilterImpl = LoggedFilter<ParetoFilterImpl, VehicleInputGraph, VehCHEnv, NullLogger>;
         ParetoFilterImpl internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL_VERBOSE

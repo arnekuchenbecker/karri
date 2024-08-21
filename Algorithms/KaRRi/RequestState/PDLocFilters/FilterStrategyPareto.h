@@ -3,9 +3,9 @@
 namespace karri {
 
     template<typename VehCHEnv, typename VehicleInputGraph>
-    class SimpleParetoFilter {
+    class FilterStrategyPareto {
     public:
-        SimpleParetoFilter(VehCHEnv &chEnv, VehicleInputGraph &graph, int paretoMaxima)
+        FilterStrategyPareto(VehCHEnv &chEnv, VehicleInputGraph &graph, int paretoMaxima)
                 : ch(chEnv.getCH()),
                   graph(graph),
                   paretoMaxima(paretoMaxima - 1) {}
