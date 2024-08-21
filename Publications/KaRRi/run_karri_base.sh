@@ -2,12 +2,13 @@
 
 
 # Skript zum Ausführen von KaRRi auf Compute-Servern.
-# Verwendung: screen exclusive bash run_karri_base.sh <source-dir> <instance-name> <output-base-dir> [timeout]
+# Verwendung: screen exclusive bash run_karri_base.sh <source-dir> <instance-name> <output-base-dir> <radius> [vehicleFile] [reducedSampleSize] [timeout]
 #	- <source-dir> : absoluter Pfad zum untersten Ordner deines Repository, also wahrscheinlich sowas wie /home/kuchenbecker/karri/
 # 	- <instance-name> : entweder Berlin-1pct oder Berlin-10pct
 #	- <output-base-dir> : absoluter Pfad zu frei gewähltem Output-Ordner, z.B. /home/kuchenbecker/Outputs/ (Ordner muss bereits vor Aufruf existieren)
 #	- <radius> : Radius, in dem PDLocs gesucht werden (in Sekunden). Üblicherweise 300.
 #	- [vehicleFile] : optionaler alternativer Pfad (absolut) zum Vehicle File
+#	- [alwaysUseVehicle] : optionales Flag um -always-veh zu setzen. Default false
 #	- [reducedSampleSize] : optionales Flag um weniger runs laufen zu lassen. Default false
 #	- [timeout]: optionales timeout für jeden Run in Sekunden
 
@@ -21,8 +22,9 @@ instanceName=$2
 outputBaseDir=$3
 radius=$4
 vehicleFile=$5
-reducedSampleSize=$6
-timeout=$7
+alwaysUseVehicle=$6
+reducedSampleSize=$7
+timeout=$8
 
 # Farben für Konsolen-Output
 green='\033[0;32m'
@@ -39,6 +41,19 @@ if [ -z ${timeout} ]; then
 	timeout="90m"
 fi
 echo "Using timeout of ${timeout}."
+
+# Setze alwaysUseVehicle auf false, falls nicht anderweitig angegeben
+if [ -z ${alwaysUseVehicle} ]; then
+	alwaysUsevehicle=false
+fi
+
+# Setze additionalParameters
+if [ "$alwaysUseVehicle" = true ]; then
+	echo "Using -always-veh"
+	additionalParameters="-always-veh"
+else
+	additionalParameters=""
+fi
 
 # Setze reducedSampleSize auf false, falls nicht anderweitig angegeben
 if [ -z ${reducedSampleSize} ]; then
@@ -105,7 +120,7 @@ do
 # Run pedestrian/KaRRi, radius 300, wait time 300
 # ID, um zwischen 5 runs zu unterscheiden
 run_id=KaRRi_run$i
-timeout $timeout taskset 0x1 ${karriBinaryDir}_ALL/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/ALL_${run_id}
+timeout $timeout taskset 0x1 ${karriBinaryDir}_ALL/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/ALL_${run_id} $additionalParameters
 
 done
 
@@ -128,7 +143,7 @@ do
 # Run pedestrian/KaRRi, wait time 300
 # ID, um zwischen 5 runs zu unterscheiden
 run_id=KaRRi_run$i
-timeout $timeout taskset 0x1 ${karriBinaryDir}_MAX_RAND/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/MAX_RAND_${k}_${run_id} -max-num-d $k
+timeout $timeout taskset 0x1 ${karriBinaryDir}_MAX_RAND/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/MAX_RAND_${k}_${run_id} -max-num-d $k $additionalParameters
 
 done
 
@@ -153,7 +168,7 @@ do
 # Run pedestrian/KaRRi, wait time 300
 # ID, um zwischen 5 runs zu unterscheiden
 run_id=KaRRi_run$i
-timeout $timeout taskset 0x1 ${karriBinaryDir}_CH_ABS/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/CH_ABS_${k}_${run_id} -max-num-d $k
+timeout $timeout taskset 0x1 ${karriBinaryDir}_CH_ABS/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/CH_ABS_${k}_${run_id} -max-num-d $k $additionalParameters
 
 done
 
@@ -178,7 +193,7 @@ do
 # Run pedestrian/KaRRi, wait time 300
 # ID, um zwischen 5 runs zu unterscheiden
 run_id=KaRRi_run$i
-timeout $timeout taskset 0x1 ${karriBinaryDir}_CH_REL/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/CH_REL_${k}_${run_id} -max-num-d $k
+timeout $timeout taskset 0x1 ${karriBinaryDir}_CH_REL/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/CH_REL_${k}_${run_id} -max-num-d $k $additionalParameters
 
 done
 
@@ -203,7 +218,7 @@ do
 # Run pedestrian/KaRRi, wait time 300
 # ID, um zwischen 5 runs zu unterscheiden
 run_id=KaRRi_run$i
-timeout $timeout taskset 0x1 ${karriBinaryDir}_PARETO_SIMPLE/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/PARETO_SIMPLE_${k}_${run_id} -max-num-d $k
+timeout $timeout taskset 0x1 ${karriBinaryDir}_PARETO_SIMPLE/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/PARETO_SIMPLE_${k}_${run_id} -max-num-d $k $additionalParameters
 
 done
 
@@ -228,7 +243,7 @@ do
 # Run pedestrian/KaRRi, wait time 300
 # ID, um zwischen 5 runs zu unterscheiden
 run_id=KaRRi_run$i
-timeout $timeout taskset 0x1 ${karriBinaryDir}_PARETO_DIR/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/PARETO_DIR_${k}_${run_id} -max-num-d $k
+timeout $timeout taskset 0x1 ${karriBinaryDir}_PARETO_DIR/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/PARETO_DIR_${k}_${run_id} -max-num-d $k $additionalParameters
 
 done
 
@@ -244,7 +259,7 @@ do
 # Run pedestrian/KaRRi, radius 300, wait time 300
 # ID, um zwischen 5 runs zu unterscheiden
 run_id=KaRRi_run$i
-timeout $timeout taskset 0x1 ${karriBinaryDir}_CH_COVER/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/CH_COVER_${run_id}
+timeout $timeout taskset 0x1 ${karriBinaryDir}_CH_COVER/Launchers/karri -w $radius -p-radius $radius -d-radius $radius -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $karriOutputDir/CH_COVER_${run_id} $additionalParameters
 
 done
 
