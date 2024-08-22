@@ -3,9 +3,9 @@
 namespace karri {
 
     template<typename VehCHEnv, typename VehicleInputGraph>
-    class FilterStrategyParetoDir {
+    class FilterStrategyParetorDir {
     public:
-        FilterStrategyParetoDir(VehCHEnv &chEnv, VehicleInputGraph &graph, int paretoMaxima)
+        FilterStrategyParetorDir(VehCHEnv &chEnv, VehicleInputGraph &graph, int paretoMaxima)
                 : ch(chEnv.getCH()),
                   graph(graph),
                   paretoMaxima(paretoMaxima - 1) {}

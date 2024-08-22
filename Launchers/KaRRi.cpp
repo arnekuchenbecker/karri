@@ -131,7 +131,7 @@
 
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_DIRECTIONAL
 
-#include "Algorithms/KaRRi/RequestState/PDLocFilters/DirectionalParetoFilter.h"
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/FilterStrategyParetorDir.h"
 
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_SIMPLE
 
@@ -609,7 +609,7 @@ int main(int argc, char *argv[]) {
         CHCoverFilter internal(*vehChEnv, vehicleInputGraph);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_DIRECTIONAL
         std::cout << "Using Filter Strategy PARETO_DIR with parameter " << inputConfig.maxNumDropoffs << std::endl;
-        using MultiParameterParetoFilterImpl = DirectionalParetoFilter<VehCHEnv, VehicleInputGraph>;
+        using MultiParameterParetoFilterImpl = FilterStrategyParetorDir<VehCHEnv, VehicleInputGraph>;
         using PDLocFilterImpl = LoggedFilter<MultiParameterParetoFilterImpl, VehicleInputGraph, VehCHEnv, NullLogger>;
         MultiParameterParetoFilterImpl internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_SIMPLE
