@@ -14,9 +14,8 @@ namespace karri {
 
         void filter(std::vector<PDLoc>& pdLocs) {
             Timer timer;
-            timer.restart();
             internalFilter.filter(pdLocs);
-            auto time = timer.elapsed();
+            const auto time = timer.elapsed<std::chrono::nanoseconds>();
 
             logger << processed << "," << time << "\n";
 
