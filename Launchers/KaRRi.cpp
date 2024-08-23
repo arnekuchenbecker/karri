@@ -593,39 +593,39 @@ int main(int argc, char *argv[]) {
 
 #if KARRI_FILTER_STRATEGY == KARRI_FILTER_MAXIMUM_RANDOM
         std::cout << "Using Filter Strategy MAX_RAND with parameter " << inputConfig.maxNumDropoffs << std::endl;
-        using PDLocFilterImpl = LoggedFilter<FilterStrategyRandom, VehicleInputGraph, VehCHEnv, NullLogger>;
+        using PDLocFilterImpl = LoggedFilter<FilterStrategyRandom, VehicleInputGraph, VehCHEnv, std::ofstream>;
         FilterStrategyRandom internal(inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_ABSOLUTE
         std::cout << "Using Filter Strategy CH_ABS with parameter " << inputConfig.maxNumDropoffs << std::endl;
-        using PDLocFilterImpl = LoggedFilter<FilterStrategyCHFix<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, NullLogger>;
+        using PDLocFilterImpl = LoggedFilter<FilterStrategyCHFix<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, std::ofstream>;
         FilterStrategyCHFix internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_RELATIVE
         std::cout << "Using Filter Strategy CH_REL with parameter " << inputConfig.maxNumDropoffs << std::endl;
-        using PDLocFilterImpl = LoggedFilter<FilterStrategyCHDyn<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, NullLogger>;
+        using PDLocFilterImpl = LoggedFilter<FilterStrategyCHDyn<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, std::ofstream>;
         FilterStrategyCHDyn internal(*vehChEnv, vehicleInputGraph, (double) inputConfig.maxNumDropoffs / 100);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_COVER
         std::cout << "Using Filter Strategy CH_COVER" << std::endl;
-        using PDLocFilterImpl = LoggedFilter<CHCoverFilter<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, NullLogger>;
+        using PDLocFilterImpl = LoggedFilter<CHCoverFilter<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, std::ofstream>;
         CHCoverFilter internal(*vehChEnv, vehicleInputGraph);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_DIRECTIONAL
         std::cout << "Using Filter Strategy PARETO_DIR with parameter " << inputConfig.maxNumDropoffs << std::endl;
         using MultiParameterParetoFilterImpl = FilterStrategyParetorDir<VehCHEnv, VehicleInputGraph>;
-        using PDLocFilterImpl = LoggedFilter<MultiParameterParetoFilterImpl, VehicleInputGraph, VehCHEnv, NullLogger>;
+        using PDLocFilterImpl = LoggedFilter<MultiParameterParetoFilterImpl, VehicleInputGraph, VehCHEnv, std::ofstream>;
         MultiParameterParetoFilterImpl internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_SIMPLE
         std::cout << "Using Filter Strategy PARETO_SIMPLE with parameter " << inputConfig.maxNumDropoffs << std::endl;
         using ParetoFilterImpl = FilterStrategyPareto<VehCHEnv, VehicleInputGraph>;
-        using PDLocFilterImpl = LoggedFilter<ParetoFilterImpl, VehicleInputGraph, VehCHEnv, NullLogger>;
+        using PDLocFilterImpl = LoggedFilter<ParetoFilterImpl, VehicleInputGraph, VehCHEnv, std::ofstream>;
         ParetoFilterImpl internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
 #elif KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL_VERBOSE
         std::cout << "Using Filter Strategy ALL with verbose logging" << std::endl;
-        using LoggedFilterImpl = LoggedFilter<AllPDLocsFilter, VehicleInputGraph, VehCHEnv, NullLogger>;
+        using LoggedFilterImpl = LoggedFilter<AllPDLocsFilter, VehicleInputGraph, VehCHEnv, std::ofstream>;
         using PDLocFilterImpl = CHCoverCheck<LoggedFilterImpl, VehicleInputGraph, VehCHEnv, std::ofstream>;
         AllPDLocsFilter allPdLocsFilter;
         LoggedFilterImpl internal(allPdLocsFilter, vehicleInputGraph, *vehChEnv);
 #else //KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL
         std::cout << "Using Filter Strategy ALL with parameter " << inputConfig.maxNumDropoffs << std::endl;
-        using PDLocFilterImpl = LoggedFilter<AllPDLocsFilter, VehicleInputGraph, VehCHEnv, NullLogger>;
+        using PDLocFilterImpl = LoggedFilter<AllPDLocsFilter, VehicleInputGraph, VehCHEnv, std::ofstream>;
         AllPDLocsFilter internal;
 #endif
 
@@ -633,13 +633,6 @@ int main(int argc, char *argv[]) {
         PDLocFilterImpl filter(internal, vehicleInputGraph, *vehChEnv);
         RequestStateInitializerImpl requestStateInitializer(vehicleInputGraph, psgInputGraph, *vehChEnv, *psgChEnv,
                                                             reqState, inputConfig, vehicleToPdLocQuery, filter);
-
-        // Log ranks for analysis
-        auto& rankLogger = LogManager<std::ofstream>::getLogger("ranks.csv", "vertex_id,rank\n");
-        FORALL_VERTICES(vehicleInputGraph, v) {
-            rankLogger << v << "," << vehChEnv->getCH().rank(v) << "\n";
-        }
-
 
         using InsertionFinderImpl = AssignmentFinder<RequestStateInitializerImpl,
                 EllipticBCHSearchesImpl,

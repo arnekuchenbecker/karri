@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Tools/Timer.h"
+
 namespace karri {
     template<typename FilterT, typename GraphT, typename CHEnvT, typename LoggerT>
     class LoggedFilter {
@@ -8,19 +10,15 @@ namespace karri {
             : internalFilter(internal),
               graph(graph),
               ch(chEnv.getCH()),
-              logger(LogManager<LoggerT>::getLogger("filter_information.csv", "filter_run,x_coord,y_coord,rank,walking_distance\n")){}
+              logger(LogManager<LoggerT>::getLogger("filter_time.csv", "filter_run,time\n")){}
 
         void filter(std::vector<PDLoc>& pdLocs) {
-            LatLng originCoords = graph.template get<LatLngAttribute>(graph.edgeHead(pdLocs[0].loc));
-            Point origin = originCoords.webMercatorProjection();
-
+            Timer timer;
+            timer.restart();
             internalFilter.filter(pdLocs);
+            auto time = timer.elapsed();
 
-            for (auto& pdLoc : pdLocs) {
-                LatLng coords = graph.template get<LatLngAttribute>(graph.edgeHead(pdLoc.loc));
-                Point flattened = coords.webMercatorProjection(); // using mercator to preserve angles
-                logger << processed << "," << flattened.x() - origin.x() << "," << flattened.y() - origin.y() << "," << ch.rank(graph.edgeHead(pdLoc.loc)) << "," << pdLoc.walkingDist << "\n";
-            }
+            logger << processed << "," << time << "\n";
 
             processed++;
         }
