@@ -74,7 +74,7 @@ namespace karri {
     template<typename, typename, bool>
     class EllipticBucketsEnvironment;
 
-    template<typename, typename>
+    template<typename, typename, typename>
     class FindPDLocsInRadiusQuery;
 
     template<typename, typename, typename, typename, typename>
@@ -116,7 +116,7 @@ class Dijkstra {
     friend
     class karri::EllipticBucketsEnvironment;
 
-    template<typename, typename>
+    template<typename, typename, typename, typename>
     friend
     class karri::FindPDLocsInRadiusQuery;
 

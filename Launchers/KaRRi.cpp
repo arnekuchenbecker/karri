@@ -65,6 +65,8 @@
 #include "Algorithms/KaRRi/AssignmentFinder.h"
 #include "Algorithms/KaRRi/SystemStateUpdater.h"
 #include "Algorithms/KaRRi/EventSimulation.h"
+#include "Tools/Logging/NullLogger.h"
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/CHCoverCheck.h"
 
 #ifdef KARRI_USE_CCHS
 #include "Algorithms/KaRRi/CCHEnvironment.h"
@@ -106,6 +108,38 @@
 #else // KARRI_DALS_STRATEGY == KARRI_DIJ
 
 #include "Algorithms/KaRRi/DalsAssignments/DijkstraStrategy.h"
+
+#endif
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/LoggedFilter.h"
+
+#if KARRI_FILTER_STRATEGY == KARRI_FILTER_MAXIMUM_RANDOM
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/FilterStrategyRandom.h"
+
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_ABSOLUTE
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/FilterStrategyCHFix.h"
+
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_RELATIVE
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/FilterStrategyCHDyn.h"
+
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_COVER
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/FilterStrategyRankCover.h"
+
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_DIRECTIONAL
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/FilterStrategyParetorDir.h"
+
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_SIMPLE
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/FilterStrategyPareto.h"
+
+#else //KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL or KARRI_FILTER_ALL_VERBOSE
+
+#include "Algorithms/KaRRi/RequestState/PDLocFilters/FilterStrategyAll.h"
 
 #endif
 
@@ -557,10 +591,48 @@ int main(int argc, char *argv[]) {
         using DALSInsertionsFinderImpl = DALSAssignmentsFinder<DALSStrategy>;
         DALSInsertionsFinderImpl dalsInsertionsFinder(dalsStrategy);
 
-        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl>;
-        RequestStateInitializerImpl requestStateInitializer(vehicleInputGraph, psgInputGraph, *vehChEnv, *psgChEnv,
-                                                            reqState, inputConfig, vehicleToPdLocQuery);
+#if KARRI_FILTER_STRATEGY == KARRI_FILTER_MAXIMUM_RANDOM
+        std::cout << "Using Filter Strategy MAX_RAND with parameter " << inputConfig.maxNumDropoffs << std::endl;
+        using PDLocFilterImpl = LoggedFilter<FilterStrategyRandom, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        FilterStrategyRandom internal(inputConfig.maxNumDropoffs);
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_ABSOLUTE
+        std::cout << "Using Filter Strategy CH_ABS with parameter " << inputConfig.maxNumDropoffs << std::endl;
+        using PDLocFilterImpl = LoggedFilter<FilterStrategyCHFix<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        FilterStrategyCHFix internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_RELATIVE
+        std::cout << "Using Filter Strategy CH_REL with parameter " << inputConfig.maxNumDropoffs << std::endl;
+        using PDLocFilterImpl = LoggedFilter<FilterStrategyCHDyn<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        FilterStrategyCHDyn internal(*vehChEnv, vehicleInputGraph, (double) inputConfig.maxNumDropoffs / 100);
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_CH_COVER
+        std::cout << "Using Filter Strategy CH_COVER" << std::endl;
+        using PDLocFilterImpl = LoggedFilter<FilterStrategyRankCover<VehCHEnv, VehicleInputGraph>, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        FilterStrategyRankCover internal(*vehChEnv, vehicleInputGraph);
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_DIRECTIONAL
+        std::cout << "Using Filter Strategy PARETO_DIR with parameter " << inputConfig.maxNumDropoffs << std::endl;
+        using MultiParameterParetoFilterImpl = FilterStrategyParetorDir<VehCHEnv, VehicleInputGraph>;
+        using PDLocFilterImpl = LoggedFilter<MultiParameterParetoFilterImpl, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        MultiParameterParetoFilterImpl internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_PARETO_SIMPLE
+        std::cout << "Using Filter Strategy PARETO_SIMPLE with parameter " << inputConfig.maxNumDropoffs << std::endl;
+        using ParetoFilterImpl = FilterStrategyPareto<VehCHEnv, VehicleInputGraph>;
+        using PDLocFilterImpl = LoggedFilter<ParetoFilterImpl, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        ParetoFilterImpl internal(*vehChEnv, vehicleInputGraph, inputConfig.maxNumDropoffs);
+#elif KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL_VERBOSE
+        std::cout << "Using Filter Strategy ALL with verbose logging" << std::endl;
+        using LoggedFilterImpl = LoggedFilter<FilterStrategyAll, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        using PDLocFilterImpl = CHCoverCheck<LoggedFilterImpl, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        FilterStrategyAll allPdLocsFilter;
+        LoggedFilterImpl internal(allPdLocsFilter, vehicleInputGraph, *vehChEnv);
+#else //KARRI_FILTER_STRATEGY == KARRI_FILTER_ALL
+        std::cout << "Using Filter Strategy ALL with parameter " << inputConfig.maxNumDropoffs << std::endl;
+        using PDLocFilterImpl = LoggedFilter<FilterStrategyAll, VehicleInputGraph, VehCHEnv, std::ofstream>;
+        FilterStrategyAll internal;
+#endif
 
+        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl, PDLocFilterImpl>;
+        PDLocFilterImpl filter(internal, vehicleInputGraph, *vehChEnv);
+        RequestStateInitializerImpl requestStateInitializer(vehicleInputGraph, psgInputGraph, *vehChEnv, *psgChEnv,
+                                                            reqState, inputConfig, vehicleToPdLocQuery, filter);
 
         using InsertionFinderImpl = AssignmentFinder<RequestStateInitializerImpl,
                 EllipticBCHSearchesImpl,
@@ -584,7 +656,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 
-        using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, LastStopBucketsEnv, CurVehLocToPickupSearchesImpl, VehPathTracker, std::ofstream>;
+        using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, LastStopBucketsEnv, CurVehLocToPickupSearchesImpl, VehPathTracker, std::ofstream, NullLogger>;
         SystemStateUpdaterImpl systemStateUpdater(vehicleInputGraph, reqState, inputConfig, curVehLocToPickupSearches,
                                                   pathTracker, routeState, ellipticBucketsEnv, lastStopBucketsEnv,
                                                   lastStopsAtVertices);

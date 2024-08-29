@@ -31,21 +31,22 @@ namespace karri {
             typename PsgInputGraphT,
             typename VehCHEnvT,
             typename PsgCHEnvT,
-            typename VehicleToPDLocQueryT>
+            typename VehicleToPDLocQueryT,
+            typename PDLocFilterT>
     class RequestStateInitializer {
 
     public:
         RequestStateInitializer(const VehInputGraphT &vehInputGraph, const PsgInputGraphT &psgInputGraph,
                                 const VehCHEnvT &vehChEnv, const PsgCHEnvT &psgChEnv,
                                 RequestState &requestState, const InputConfig &inputConfig,
-                                VehicleToPDLocQueryT &vehicleToPdLocQuery)
+                                VehicleToPDLocQueryT &vehicleToPdLocQuery, PDLocFilterT& pdLocFilter)
                 : vehInputGraph(vehInputGraph), psgInputGraph(psgInputGraph),
                   revPsgGraph(psgInputGraph.getReverseGraph()),
                   vehCh(vehChEnv.getCH()), psgCh(psgChEnv.getCH()),
                   vehChQuery(vehChEnv.template getFullCHQuery<>()), psgChQuery(psgChEnv.template getFullCHQuery<>()),
                   requestState(requestState),
                   inputConfig(inputConfig),
-                  findPdLocsInRadiusQuery(psgInputGraph, revPsgGraph, inputConfig, requestState.pickups,
+                  findPdLocsInRadiusQuery(psgInputGraph, revPsgGraph, inputConfig, pdLocFilter, requestState.pickups,
                                           requestState.dropoffs),
                   vehicleToPdLocQuery(vehicleToPdLocQuery) {}
 
@@ -128,7 +129,7 @@ namespace karri {
         RequestState &requestState;
         const InputConfig &inputConfig;
 
-        FindPDLocsInRadiusQuery<PsgInputGraphT> findPdLocsInRadiusQuery;
+        FindPDLocsInRadiusQuery<PsgInputGraphT, PDLocFilterT> findPdLocsInRadiusQuery;
         VehicleToPDLocQueryT &vehicleToPdLocQuery;
 
     };
