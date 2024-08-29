@@ -9,9 +9,9 @@ namespace karri {
     * that is not contained in the pdlocs for this request
     */
     template<typename VehCHEnv, typename VehicleInputGraph>
-    class CHCoverFilter {
+    class FilterStrategyRankCover {
     public:
-        CHCoverFilter(const VehCHEnv &chEnv, const VehicleInputGraph &graph)
+        FilterStrategyRankCover(const VehCHEnv &chEnv, const VehicleInputGraph &graph)
         : chEnv(chEnv), graph(graph) {}
 
         void filter(std::vector<PDLoc> &pdLocs) {
